@@ -11,7 +11,7 @@ const globalerrorHandler = require('./utils/globalerrorHandler');
 
 //access to env variable
 dotenv.config({ path: './config.env' });
-const PORT = process.env.PORT
+
 
 // database connection 
 mongoose.connect(process.env.DATABASE)
@@ -39,10 +39,7 @@ app.use('/api/v1/users', userRouter)
 
 
 // starting the server
-app.listen(PORT, () => {
-    console.log("app stated running at port ", PORT);
-})
-app.use(globalerrorHandler)
+module.exports = app;
 
 
 

@@ -53,13 +53,14 @@ exports.signUp = catchAsync(async (req, res, next) => {
 
 exports.login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
+    console.log(req.body);
 
     if (!email || !password) {
         return next(new appError("please enter credential for get into in ", 400));
     }
 
     const user = await User.findOne({ email }).select('+password')
-
+    console.log(user);
 
     if (!user || !await user.correctPass(password, user.password)) {
 
