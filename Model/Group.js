@@ -21,7 +21,7 @@ const groupSchema = new mongoose.Schema({
     },
     chats: {
         type: mongoose.mongo.ObjectId,
-        ref: 'OneToOneMessage',
+        ref: 'GroupMsg',
 
 
     },

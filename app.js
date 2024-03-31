@@ -36,7 +36,9 @@ app.use(morgan("dev"))
 
 // defining routes
 app.use('/api/v1/users', userRouter)
-
+app.all('*', (req, res) => {
+    console.log("not found");
+})
 
 // starting the server
 module.exports = app;

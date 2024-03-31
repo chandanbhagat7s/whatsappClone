@@ -10,6 +10,7 @@ const Request = require("./Model/Request");
 const OneToOneMessage = require("./Model/OneToOneMessage");
 const Message = require("./Model/Message");
 const Groups = require("./Model/Group");
+const GroupMessage = require("./Model/GroupMessage");
 
 // created server
 const server = http.createServer(app)
@@ -364,6 +365,49 @@ io.on("connection", async (socket) => {
 
 
 
+    })
+
+
+
+
+    // socket for group
+    socket.on("join-group", function (group) {
+        console.log("group is ", group);
+        group.arr.map((el) => {
+            socket.join(el);
+
+        })
+
+    })
+
+    socket.on("send-message", async (newMsg) => {
+
+        console.log("new msg", newMsg);
+
+        // now saving the dat ainto database
+        // const group = await Groups.findById(newMsg._id)
+
+        // console.log("doc of msg", group);
+        let d = new Date();
+        const msgTime = [d.getDate(), d.getMonth(), d.getFullYear(), `${d.getHours()}:${d.getMinutes()} ${d.getHours() >= 12 ? 'PM' : 'AM'}`]
+
+        const createdMessage = {
+            type: "text",
+            msg: newMsg.msg,
+            time: msgTime,
+            senderId: newMsg.senderID,
+            senderName: newMsg.senderName
+        }
+        const msg = await GroupMessage.findOneAndUpdate({
+            ofGroup: newMsg._id
+        }, {
+            $push: { msg: createdMessage }
+        })
+
+        console.log("doc of msg", msg);
+
+        // send to group and not send to sender message
+        socket.broadcast.to(newMsg._id).emit("new-message", { newMsg })
     })
 
 

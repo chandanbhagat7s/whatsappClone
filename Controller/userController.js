@@ -5,6 +5,7 @@
 // we are sending the users which are not our friends (the remeaning ones)
 
 const Groups = require("../Model/Group");
+const GroupMessage = require("../Model/GroupMessage");
 const Message = require("../Model/Message");
 const OneToOneMessage = require("../Model/OneToOneMessage");
 const Request = require("../Model/Request");
@@ -24,6 +25,29 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
     res.status(200).send({
         status: true,
         remaining_users,
+        message: "Users Found Successfully"
+    })
+
+
+
+
+})
+
+
+
+
+
+
+
+exports.everyone = catchAsync(async (req, res, next) => {
+    let users = await User.find({ _id: { $ne: req.user._id } }).select("userName _id bio")
+
+
+
+
+    res.status(200).send({
+        status: true,
+        users,
         message: "Users Found Successfully"
     })
 
@@ -75,6 +99,31 @@ exports.getMsgList = catchAsync(async (req, res, next) => {
 
 
 
+exports.getMsgListGroup = catchAsync(async (req, res, next) => {
+
+    console.log(
+        "REQUEST PARAM", req.params
+    );
+    const msgs = await GroupMessage.find({ ofGroup: req.params.groupID })
+
+    console.log(msgs);
+
+
+    res.status(200).send({
+        status: true,
+        message: "msg List searched successfully",
+        data: msgs
+    })
+
+
+})
+
+
+
+
+
+
+
 
 
 
@@ -91,18 +140,61 @@ exports.getAllFriendRequest = catchAsync(async (req, res, next) => {
 
 
 exports.createGroup = catchAsync(async (req, res, next) => {
-    const { groupName, groupBio, members, admins, chats } = req.body;
-    if (!groupName || !groupBio || !members || !admins || !chats) {
+    const { groupName, groupBio, members, admins } = req.body;
+    console.log(req.body);
+    if (!groupName || !groupBio || !members || !admins) {
         return next(new appError("please provide all the details to create a group", 400))
     }
     const group = await Groups.create({
-        groupName, groupBio, members, admins, chats
+        groupName, groupBio, members, admins
+    })
+
+    await GroupMessage.create({
+        ofGroup: group._id,
+
     })
 
 
     res.status(200).send({
         status: true,
-        message: "Friend Request List searched successfully"
+        message: "Friend Request List searched successfully",
+        group
+    })
+})
+
+
+
+
+
+exports.giveAllGroupUser = catchAsync(async (req, res, next) => {
+    console.log("users id is ", req.user._id);
+    const groups = await Groups.find({
+        members: { $in: req.user._id }
+    }).populate('chats')
+
+
+
+    res.status(200).send({
+        status: true,
+        groups
+    })
+})
+
+
+exports.getAllGroupsDetail = catchAsync(async (req, res, next) => {
+
+    if (!req.params.groupID) {
+        return next(new appError("please provide all the details to information group", 400))
+    }
+    const group = await Groups.find({
+        members: { $contains: req.user._id }
+    }).populate("chats")
+
+
+    res.status(200).send({
+        status: true,
+        message: "Friend Request List searched successfully",
+        group
     })
 })
 
