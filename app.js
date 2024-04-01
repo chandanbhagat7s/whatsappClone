@@ -3,6 +3,7 @@
 const express = require('express');
 const app = express()
 const dotenv = require('dotenv');
+const cloudinary = require('cloudinary');
 const mongoose = require('mongoose');
 const userRouter = require('./Routes/userRoutes');
 const cookieParser = require('cookie-parser');
@@ -32,6 +33,16 @@ app.use(cookieParser())
 
 // to know what the request parameter
 app.use(morgan("dev"))
+
+
+//  for uploading files
+cloudinary.v2.config({
+    cloud_name: process.env.CLOUD_NAME,
+    api_key: process.env.API_KEY,
+    api_secret: process.env.API_SECRET
+});
+
+
 
 
 // defining routes

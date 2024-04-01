@@ -4,6 +4,12 @@
 // get all users 
 // we are sending the users which are not our friends (the remeaning ones)
 
+
+const multer = require('multer')
+const sharp = require('sharp')
+const fs = require('fs');
+const cloudinary = require('cloudinary');
+
 const Groups = require("../Model/Group");
 const GroupMessage = require("../Model/GroupMessage");
 const Message = require("../Model/Message");
@@ -204,7 +210,94 @@ exports.getAllGroupsDetail = catchAsync(async (req, res, next) => {
 
 
 
+// image related operation 
 
+// now we will decrease the quality and perform many operation 
+const multerStorage = multer.memoryStorage();
+
+
+
+
+exports.saveImageDisk = catchAsync(async (req, res, next) => {
+    console.log("file is ", req.files);
+    if (!req.files.data) {
+        return next(new appError("please upload a file", 400))
+    }
+
+
+
+
+    // images
+    console.log("IN DISK ", req.files);
+    req.body.data = []
+    req.files.data &&
+        await Promise.all(req.files.data.map(async (el, i) => {
+            const parts = el.originalname.split('.');
+
+            // Take the last element of the array, which represents the file extension
+            const extension = parts[parts.length - 1];
+            const fileName = `${req.user._id}-${i}-${Date.now()}.${extension}`
+            await sharp(el.buffer).toFile(`./pubic/${fileName}`)
+            req.body.data.push(fileName)
+        }))
+    console.log("exit");
+
+    next()
+
+
+})
+
+
+
+
+const upload = multer({
+    storage: multerStorage,
+});
+// exports.uploadFilesBtn = upload.array('data', 10)
+exports.uploadFilesBtn = upload.fields([{ name: 'data', maxCount: 20 }])
+
+
+exports.submitFile = catchAsync(async (req, res, next) => {
+    console.log(req.files);
+    let sendingData = [];
+    let result;
+    if (req.files) {
+
+        try {
+            req.body.data.map(async (el, i) => {
+                result = await cloudinary.v2.uploader.upload(`pubic/${el}`, {
+                    folder: 'cloudFiles',
+                });
+                console.log(result);
+
+
+                if (result) {
+                    // Set the public_id and secure_url in DB
+                    sendingData.push(result.url)
+
+                }
+                if (req.body.data.length == (i + 1)) {
+
+
+                    res.status(200).send({
+                        status: true,
+                        sendingData
+                    })
+                }
+            })
+
+
+        } catch (error) {
+            console.log("error", error);
+            res.status(200).send({
+                status: false,
+
+            })
+        }
+    }
+
+
+})
 
 
 

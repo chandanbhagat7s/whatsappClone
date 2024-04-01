@@ -289,16 +289,33 @@ io.on("connection", async (socket) => {
         let d = new Date();
         const msgTime = [d.getDate(), d.getMonth(), d.getFullYear(), `${d.getHours()}:${d.getMinutes()}`]
         // creating new chat
+        let createdMessage;
+        if (data.type == "text") {
+            createdMessage = {
+                by: data.sender,
+                type: "text",
+                reaction: "",
+                time: msgTime,
+                message: data.message,
+                seen: false
+            }
+        } else {
+            createdMessage = {
+                by: data.sender,
+                type: data.type,
+                reaction: "",
+                time: msgTime,
+                message: data.message,
+                seen: false,
+                uplodefiles: data.uploads
+
+            }
+        }
         const chat = await OneToOneMessage.findByIdAndUpdate(data.communication, {
 
             $push: {
                 msg: {
-                    by: data.sender,
-                    type: "text",
-                    reaction: "",
-                    time: msgTime,
-                    message: data.message,
-                    seen: false
+                    ...createdMessage
                 }
             }
         })
@@ -391,13 +408,26 @@ io.on("connection", async (socket) => {
         let d = new Date();
         const msgTime = [d.getDate(), d.getMonth(), d.getFullYear(), `${d.getHours()}:${d.getMinutes()} ${d.getHours() >= 12 ? 'PM' : 'AM'}`]
 
-        const createdMessage = {
-            type: "text",
-            msg: newMsg.msg,
-            time: msgTime,
-            senderId: newMsg.senderID,
-            senderName: newMsg.senderName
+        let createdMessage;
+        if (newMsg.type == "text") {
+            createdMessage = {
+                type: "text",
+                msg: newMsg.msg,
+                time: msgTime,
+                senderId: newMsg.senderID,
+                senderName: newMsg.senderName
+            }
+        } else {
+            createdMessage = {
+                type: newMsg.type,
+                uploads: newMsg.uploads,
+                msg: newMsg.msg,
+                time: msgTime,
+                senderId: newMsg.senderID,
+                senderName: newMsg.senderName
+            }
         }
+
         const msg = await GroupMessage.findOneAndUpdate({
             ofGroup: newMsg._id
         }, {
